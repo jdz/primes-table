@@ -1,0 +1,76 @@
+#!/usr/bin/env ruby
+
+require_relative "lib/primes"
+
+if __FILE__ == $0
+  require "optparse"
+
+  DEFAULT_LIMIT = 10
+
+  def parse_options(args)
+    options = {
+      :debug => false
+    }
+
+    op = OptionParser.new do |o|
+      o.banner = "Usage: primes [limit]"
+
+      o.separator ""
+      o.separator <<EOF
+Prints a multiplication table of first <limit> (default #{DEFAULT_LIMIT})
+primes.
+EOF
+
+      o.separator ""
+      o.on_tail("-d", "--debug", "Debug mode") do |x|
+        options[:debug] = x
+      end
+
+      o.on_tail("-h", "--help", "Show this message") do
+        puts(o.help)
+        exit(0)
+      end
+    end
+
+    begin
+      op.parse!(args)
+    rescue OptionParser::InvalidOption => e
+      $stderr.puts(e)
+      $stderr.puts()
+      $stderr.puts(op)
+      exit(1)
+    end
+
+    options
+  end
+
+  $options = parse_options(ARGV)
+
+  begin
+    # Check positional parameters.
+    arg = ARGV.shift
+    if arg
+      if arg =~ /^[1-9][0-9]*$/
+        limit = arg.to_i
+      else
+        raise OptionParser::InvalidArgument.new("limit must be an integer greater than zero")
+      end
+    end
+
+    # We only have one positional parameter.
+    if !ARGV.empty?
+      raise OptionParser::InvalidArgument.new("junk on command line: #{ARGV.join(', ')}")
+    end
+
+    main(limit || DEFAULT_LIMIT)
+    exit(0)
+  rescue StandardError => e
+    $stderr.puts(e)
+    if $options[:debug]
+      e.backtrace.each do |frame|
+        $stderr.puts(frame)
+      end
+    end
+    exit(1)
+  end
+end
